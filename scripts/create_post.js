@@ -1,66 +1,67 @@
 document.addEventListener("DOMContentLoaded", () => {
-  const form = document.getElementById("form");
-  const resetButton = document.getElementById("reset-form");
-  const notification = document.querySelector(".notification");
-  const deleteButton = notification.querySelector(".delete");
+  // Connect to form and UI elements from the HTML
+  const postForm = document.getElementById("form");                            // <form id="form">
+  const clearFormButton = document.getElementById("reset-form-button");       // <button id="reset-form-button">
+  const notificationBox = document.querySelector(".notification");            // <div class="notification">
+  const notificationCloseButton = notificationBox.querySelector(".delete");   // <button class="delete">
 
-  // Handle form submission asynchronously
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
+  // Handle form submission
+  postForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
 
-    const title = form.elements["title"].value.trim();
-    const content = form.elements["content"].value.trim();
+    const postTitle = postForm.elements["title"].value.trim();   // input[name="title"]
+    const postContent = postForm.elements["content"].value.trim(); // textarea[name="content"]
 
-    if (!title || !content) return;
+    if (!postTitle || !postContent) return;
 
-    // Sends a post request to the server with the form data
-    // and handles the response
     try {
-      const res = await fetch("http://localhost:3000/blogapi/posts", {
+      const response = await fetch("http://localhost:3000/blogapi/posts", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ title, content }),
+        body: JSON.stringify({ title: postTitle, content: postContent }),
       });
 
-      // Server response handling (success or error)
-      if (res.ok) {
-        showNotification("Added Successfully");
-        form.reset();
+      if (response.ok) {
+        showNotification("Post added successfully.");
+        postForm.reset();
       } else {
-        showNotification("Failed to add post", true);
+        showNotification("Failed to add post.", true);
       }
-    } catch (err) {
-      console.error(err);
-      showNotification("Server error", true);
+    } catch (error) {
+      console.error("Error submitting post:", error);
+      showNotification("Server error. Please try again later.", true);
     }
   });
 
-  // Handle manual form when reset button is clicked
-  resetButton.addEventListener("click", (e) => {
-    e.preventDefault();
-    form.reset();
+  // Handle manual form reset
+  clearFormButton.addEventListener("click", (event) => {
+    event.preventDefault();
+    postForm.reset();
   });
 
-  // Hide notification when delete button is clicked
-  deleteButton.addEventListener("click", () => {
-    notification.classList.add("is-hidden");
+  // Hide notification when close button is clicked
+  notificationCloseButton.addEventListener("click", () => {
+    notificationBox.classList.add("is-hidden");
   });
 
-  // Funtion to show notification messages
-  // with different styles based on success or error
+  // Show a notification message
   function showNotification(message, isError = false) {
-    notification.classList.remove("is-hidden", "is-primary", "is-danger");
-    notification.classList.add(isError ? "is-danger" : "is-primary");
-    notification.innerHTML = `
+    // Reset state and apply styling
+    notificationBox.classList.remove("is-hidden", "is-primary", "is-danger");
+    notificationBox.classList.add(isError ? "is-danger" : "is-primary");
+
+    // Inject message content and a close button
+    notificationBox.innerHTML = `
       <button class="delete"></button>
       ${message}
     `;
 
-    // Dynamically add event listener to the delete button inside the notification
-    notification.querySelector(".delete").addEventListener("click", () => {
-      notification.classList.add("is-hidden");
+    // Re-bind close button after HTML overwrite
+    const newCloseButton = notificationBox.querySelector(".delete");
+    newCloseButton.addEventListener("click", () => {
+      notificationBox.classList.add("is-hidden");
     });
   }
 });

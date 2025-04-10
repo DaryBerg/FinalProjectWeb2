@@ -1,60 +1,67 @@
 const express = require('express');
-const app = express();
+const server = express();
 const cors = require('cors');
-const PORT = 3000;
+const portNumber = 3000;
 
-app.use(cors());
-app.use(express.json());
+// Middleware setup
+server.use(cors());
+server.use(express.json());
 
-app.use(cors({
+// CORS Configuration
+server.use(cors({
   origin: 'http://127.0.0.1:5500',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type'],
   credentials: false,
 }));
 
-// Temporary in-memory storage
-let posts = [];
-let nextId = 1;
+// In-memory post store
+let postStorage = [];
+let uniqueId = 1;
 
-// Create a new post
-app.post('/blogapi/posts', (req, res) => {
+// Route to create a new blog post
+server.post('/blogapi/posts', (req, res) => {
   const { title, content } = req.body;
 
   if (!title || !content) {
     return res.status(400).json({ error: 'Title and content are required' });
   }
 
-  const newPost = { id: nextId++, title, content };
-  posts.unshift(newPost); // adds to the top like ORDER BY DESC
-  res.status(201).json(newPost);
+  const blogPost = {
+    id: uniqueId++,
+    title,
+    content
+  };
+
+  postStorage.unshift(blogPost); // Most recent at the top
+  res.status(201).json(blogPost);
 });
 
-// Fetch all posts
-app.get('/blogapi/posts', (req, res) => {
-  res.json(posts);
+// Route to retrieve all posts
+server.get('/blogapi/posts', (req, res) => {
+  res.json(postStorage);
 });
 
-// Delete a post
-app.delete('/blogapi/posts/:id', (req, res) => {
-  const id = parseInt(req.params.id);
-  const index = posts.findIndex(p => p.id === id);
+// Route to delete a post by ID
+server.delete('/blogapi/posts/:id', (req, res) => {
+  const postId = parseInt(req.params.id);
+  const position = postStorage.findIndex(entry => entry.id === postId);
 
-  if (index === -1) {
+  if (position === -1) {
     return res.status(404).json({ error: 'Post not found' });
   }
 
-  posts.splice(index, 1);
+  postStorage.splice(position, 1);
   res.json({ message: 'Post deleted' });
 });
 
-// Update a post
-app.put('/blogapi/posts/:id', (req, res) => {
-  const id = parseInt(req.params.id);
+// Route to update an existing post
+server.put('/blogapi/posts/:id', (req, res) => {
+  const postId = parseInt(req.params.id);
   const { title, content } = req.body;
 
-  const post = posts.find(p => p.id === id);
-  if (!post) {
+  const existingPost = postStorage.find(entry => entry.id === postId);
+  if (!existingPost) {
     return res.status(404).json({ error: 'Post not found' });
   }
 
@@ -62,11 +69,12 @@ app.put('/blogapi/posts/:id', (req, res) => {
     return res.status(400).json({ error: 'Title and content are required' });
   }
 
-  post.title = title;
-  post.content = content;
-  res.json(post);
+  existingPost.title = title;
+  existingPost.content = content;
+  res.json(existingPost);
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}`);
+// Start the server
+server.listen(portNumber, () => {
+  console.log(`Blog server is live at http://localhost:${portNumber}`);
 });

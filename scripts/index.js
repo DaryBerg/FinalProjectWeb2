@@ -1,40 +1,46 @@
 document.addEventListener("DOMContentLoaded", async () => {
-  const container = document.getElementById("posts-container");
+  const contentFeed = document.getElementById("contentFeed");
+
+  // Clear the feed before inserting new content
+  contentFeed.innerHTML = "";
 
   try {
-    //Sends GET request to the server to fetch posts
-    const res = await fetch("http://localhost:3000/blogapi/posts");
-    const posts = await res.json();
+    // Fetch posts from the backend API
+    const response = await fetch("http://localhost:3000/blogapi/posts");
+    const postData = await response.json();
 
-    // Clear container before adding new posts
-    container.innerHTML = "";
-
-    // If there are no posts, display a message
-    if (!posts.length) {
-      const noPostsMsg = document.createElement("p");
-      noPostsMsg.textContent = "No posts yet.";
-      noPostsMsg.classList.add("has-text-grey", "has-text-centered", "is-size-5");
-      container.appendChild(noPostsMsg);
-    } else {
-      posts.forEach((post) => {
-        const box = document.createElement("div");
-        box.className = "box";
-
-        box.innerHTML = `
-          <h3 class="title is-4">${post.title}</h3>
-          <div class="content-scroll">${post.content}</div>
-        `;
-
-        container.appendChild(box);
-      });
+    // Handle empty post list
+    if (postData.length === 0) {
+      const emptyNotice = document.createElement("p");
+      emptyNotice.textContent = "No posts yet.";
+      emptyNotice.classList.add("has-text-grey", "has-text-centered", "is-size-5");
+      contentFeed.appendChild(emptyNotice);
+      return;
     }
-  } catch (err) {
-    console.error("Error fetching posts:", err);
 
-    // If an error occurs, log it, then display an error message
-    const errorMsg = document.createElement("p");
-    errorMsg.textContent = "Failed to load posts. Please try again later.";
-    errorMsg.classList.add("has-text-danger");
-    container.appendChild(errorMsg);
+    // Render each post
+    for (const entry of postData) {
+      const postCard = document.createElement("div");
+      postCard.className = "box";
+
+      const titleNode = document.createElement("h3");
+      titleNode.className = "title is-4";
+      titleNode.textContent = entry.title;
+
+      const contentNode = document.createElement("div");
+      contentNode.className = "content-scroll";
+      contentNode.textContent = entry.content;
+
+      postCard.appendChild(titleNode);
+      postCard.appendChild(contentNode);
+      contentFeed.appendChild(postCard);
+    }
+  } catch (error) {
+    console.error("Error fetching posts:", error);
+
+    const failNotice = document.createElement("p");
+    failNotice.textContent = "Failed to load posts. Please try again later.";
+    failNotice.classList.add("has-text-danger");
+    contentFeed.appendChild(failNotice);
   }
 });
