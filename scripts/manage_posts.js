@@ -106,7 +106,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Delete post
         deleteButton.addEventListener("click", async () => {
-          const confirmed = confirm("Are you sure you want to delete this post?");
+          const confirmed = confirm(`Are you sure you want to delete post titled "${entry.title}"?`);
           if (!confirmed) return;
 
           try {
